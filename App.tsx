@@ -108,14 +108,11 @@ const App: React.FC = () => {
 
   const handleShuffle = () => {
     if (displayedCards.length <= 1) return;
-    
-    // Proper Fisher-Yates Shuffle
     const arr = [...displayedCards];
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
-    
     setDisplayedCards(arr);
     setCurrentIndex(0);
     setIsFlipped(false);
@@ -167,9 +164,12 @@ const App: React.FC = () => {
       if (newDeckData && newDeckData.length > 0) {
         handleAddUnit(topic, newDeckData);
         setAiTopic('');
+      } else {
+        throw new Error("Empty data returned");
       }
-    } catch (e) {
-      alert("Babushka: 'My brain is a bit fuzzy. Let's try again later!'");
+    } catch (e: any) {
+      console.error(e);
+      alert(`Babushka: "I'm having a little trouble with '${topic}'. Make sure my secret key is in the project settings!"`);
     } finally {
       setIsGenerating(false);
     }

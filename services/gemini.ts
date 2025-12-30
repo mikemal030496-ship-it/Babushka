@@ -1,59 +1,60 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-// Fix: Initialize GoogleGenAI strictly with the required named parameter and environment variable
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const askBabushka = async (query: string, currentWord: string) => {
-  const ai = getAI();
+  // Always create a new instance to ensure environment variables are fresh
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `User is learning Russian. Current word/topic: "${currentWord}". User asks: "${query}". 
-      Respond as a friendly Russian grandmother (Babushka). Keep it encouraging and informative about language or culture. 
-      Use a mix of English and small Russian phrases. Keep response under 100 words.`,
+      contents: `User is studying "${currentWord}". Question: "${query}"`,
       config: {
-        temperature: 0.8,
-        topP: 0.9,
+        systemInstruction: "You are a friendly and encouraging Russian grandmother (Babushka). Use a mix of English and small Russian phrases. Keep your response warm, cultural, and under 80 words.",
+        temperature: 0.7,
       }
     });
-    // Fix: Access .text property directly (do not call as a function)
-    return response.text || "I'm a bit tired today, dearie. Ask me again later!";
+    return response.text?.trim() || "I'm a bit tired today, dearie. Ask me again later!";
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return "The samovar is boiling over! I can't talk right now. (Error connection)";
+    console.error("Babushka Chat Error:", error);
+    return "The samovar is boiling over! I can't talk right now, dear. Check your connection!";
   }
 };
 
 export const generateDeck = async (topic: string) => {
-  const ai = getAI();
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Create a set of 20 Russian-English flashcards for the topic: "${topic}". 
-      Each flashcard must include the Russian word (f), English translation (t), phonetic transcription (p), and a short usage context or interesting fact (c).`,
+      contents: `Generate exactly 20 high-quality Russian-English flashcards for the topic: "${topic}".`,
       config: {
+        systemInstruction: "You are an expert Russian language teacher. Return a JSON array of flashcards. Each card must have 'f' (Russian word), 't' (English), 'p' (Pronunciation), and 'c' (short context sentence). Use only valid JSON.",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
           items: {
             type: Type.OBJECT,
             properties: {
-              f: { type: Type.STRING, description: "Russian word/phrase" },
+              f: { type: Type.STRING, description: "Russian word or phrase" },
               t: { type: Type.STRING, description: "English translation" },
-              p: { type: Type.STRING, description: "Phonetic pronunciation" },
-              c: { type: Type.STRING, description: "Example sentence or context" }
+              p: { type: Type.STRING, description: "Phonetic transcription" },
+              c: { type: Type.STRING, description: "Context or interesting fact" }
             },
             required: ["f", "t", "p", "c"]
           }
         }
       }
     });
-    // Fix: Access .text property directly and parse the JSON string result
+    
     const jsonStr = response.text?.trim() || "[]";
-    return JSON.parse(jsonStr);
+    const data = JSON.parse(jsonStr);
+    
+    if (!Array.isArray(data) || data.length === 0) {
+      throw new Error("Invalid format returned from AI");
+    }
+    
+    return data;
   } catch (error) {
-    console.error("Gemini Deck Generation Error:", error);
+    console.error("Babushka Deck Gen Error:", error);
     throw error;
   }
 };
