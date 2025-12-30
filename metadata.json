@@ -1,0 +1,7 @@
+{
+  "name": "Babushka: Russian Language Trainer",
+  "description": "A delightful Russian flashcard application featuring a traditional Matryoshka doll and smart language assistance powered by Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
