@@ -1,13 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
 export const askBabushka = async (query: string, currentWord: string) => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    console.error("API_KEY is missing from environment variables.");
-    return "The samovar is empty, dearie! (API Key is missing in project settings).";
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -20,17 +14,12 @@ export const askBabushka = async (query: string, currentWord: string) => {
     return response.text?.trim() || "My ears aren't what they used to be... can you repeat that?";
   } catch (error) {
     console.error("Babushka Chat Error:", error);
-    return "My samovar is broken! Check your internet connection, dearie.";
+    return "The samovar is boiling over! I'm a bit overwhelmed right now, dearie.";
   }
 };
 
 export const generateDeck = async (topic: string) => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    throw new Error("API_KEY_MISSING");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',

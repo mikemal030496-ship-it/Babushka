@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { INITIAL_DECKS, CATEGORY_LABELS } from './constants';
 import { Decks, FlashCardItem } from './types';
@@ -9,6 +10,7 @@ import { generateDeck } from './services/gemini';
 interface CustomUnit {
   id: string;
   name: string;
+  icon?: string;
   cards: FlashCardItem[];
 }
 
@@ -26,7 +28,6 @@ const App: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
 
-  // 1. Initial Load & Shared Link Check
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_CUSTOM);
     if (saved) {
@@ -44,7 +45,7 @@ const App: React.FC = () => {
         const decoded = JSON.parse(atob(sharedData));
         if (decoded.name && Array.isArray(decoded.cards)) {
           const newId = `shared_${Date.now()}`;
-          const newUnit = { id: newId, name: decoded.name, cards: decoded.cards };
+          const newUnit = { id: newId, name: decoded.name, cards: decoded.cards, icon: decoded.icon || '🎁' };
           
           setCustomStore(prev => {
             const updated = { ...prev, [newId]: newUnit };
@@ -63,14 +64,12 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 2. Persist Custom Units
   useEffect(() => {
     if (Object.keys(customStore).length > 0) {
       localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(customStore));
     }
   }, [customStore]);
 
-  // 3. Computed Decks Source
   const allDecksSource = useMemo((): Decks => {
     const merged: Decks = { ...INITIAL_DECKS };
     Object.values(customStore).forEach((unit: CustomUnit) => {
@@ -79,7 +78,6 @@ const App: React.FC = () => {
     return merged;
   }, [customStore]);
 
-  // 4. Update displayed cards when category changes
   useEffect(() => {
     const source = allDecksSource[currentCategory] || [];
     setDisplayedCards([...source]);
@@ -122,7 +120,7 @@ const App: React.FC = () => {
   const handleShareUnit = (id: string) => {
     const unit = customStore[id];
     if (!unit) return;
-    const payload = btoa(JSON.stringify({ name: unit.name, cards: unit.cards }));
+    const payload = btoa(JSON.stringify({ name: unit.name, cards: unit.cards, icon: unit.icon }));
     const shareUrl = `${window.location.origin}${window.location.pathname}?deck=${payload}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
@@ -143,36 +141,32 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAddUnit = (name: string, cards: FlashCardItem[]) => {
+  const handleAddUnit = (name: string, cards: FlashCardItem[], icon: string = '✨') => {
     const newId = `custom_${Date.now()}`;
     setCustomStore(prev => ({
       ...prev,
-      [newId]: { id: newId, name, cards }
+      [newId]: { id: newId, name, cards, icon }
     }));
     setCurrentCategory(newId);
     setShowCustomModal(false);
     setShowLibraryModal(false);
   };
 
-  const handleAiGenerate = async (topicToUse?: string) => {
+  const handleAiGenerate = async (topicToUse?: string, iconToUse?: string) => {
     const topic = (topicToUse || aiTopic).trim();
     if (!topic) return;
     setIsGenerating(true);
     try {
       const newDeckData = await generateDeck(topic);
       if (newDeckData && newDeckData.length > 0) {
-        handleAddUnit(topic, newDeckData);
+        handleAddUnit(topic, newDeckData, iconToUse || '✨');
         setAiTopic('');
       } else {
         throw new Error("EMPTY_RESPONSE");
       }
     } catch (e: any) {
       console.error("AI Generation Error:", e);
-      if (e.message === 'API_KEY_MISSING') {
-        alert("Babushka: 'The samovar is cold! You forgot to put the secret API key in the Vercel project settings!'");
-      } else {
-        alert("Babushka: 'My brain is a bit fuzzy. Let's try again later! Check your browser console to see what happened.'");
-      }
+      alert("Babushka: 'My brain is a bit fuzzy. Let's try again in a moment, dearie!'");
     } finally {
       setIsGenerating(false);
     }
@@ -180,7 +174,10 @@ const App: React.FC = () => {
 
   const getLabel = (key: string) => {
     if (CATEGORY_LABELS[key] && key !== 'custom') return CATEGORY_LABELS[key];
-    if (customStore[key]) return `Unit 📂: ${customStore[key].name}`;
+    if (customStore[key]) {
+      const icon = customStore[key].icon || '📂';
+      return `Unit ${icon}: ${customStore[key].name}`;
+    }
     return key;
   };
 
@@ -245,7 +242,6 @@ const App: React.FC = () => {
             onClick={() => setIsFlipped(!isFlipped)}
             className={`relative w-full h-full transition-all duration-700 cursor-pointer transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
           >
-            {/* Front */}
             <div className="absolute inset-0 backface-hidden bg-white rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center p-8 border border-stone-100">
               <div className="absolute top-8 text-[10px] font-black text-stone-300 uppercase tracking-widest">{getLabel(currentCategory)}</div>
               <div className={`font-bold text-slate-800 text-center leading-tight break-words px-4 ${currentItem.f.length > 12 ? 'text-4xl' : 'text-6xl'}`}>
@@ -254,7 +250,6 @@ const App: React.FC = () => {
               <div className="absolute bottom-10 text-stone-300 text-[10px] font-bold tracking-widest uppercase">Tap to reveal</div>
             </div>
 
-            {/* Back */}
             <div className="absolute inset-0 backface-hidden rotate-y-180 matryoshka-gradient rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.2)] flex flex-col items-center justify-center p-8 text-white text-center border-4 border-white/10">
               <div className="text-4xl font-black mb-2 drop-shadow-lg">{currentItem.t}</div>
               <div className="text-xl font-medium text-red-100 italic mb-6">[{currentItem.p}]</div>

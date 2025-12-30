@@ -6,12 +6,13 @@ import { FlashCardItem } from '../types';
 interface CustomUnit {
   id: string;
   name: string;
+  icon?: string;
   cards: FlashCardItem[];
 }
 
 interface LibraryModalProps {
   onClose: () => void;
-  onSelectTopic: (topic: string) => void;
+  onSelectTopic: (topic: string, icon?: string) => void;
   customUnits?: CustomUnit[];
   onDeleteUnit?: (id: string) => void;
 }
@@ -82,12 +83,12 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
                   <div key={unit.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-stone-200 shadow-sm group hover:border-red-200 transition-all">
                     <button 
                       onClick={() => {
-                        onSelectTopic(unit.name);
+                        onSelectTopic(unit.name, unit.icon);
                         onClose();
                       }}
                       className="flex-1 text-left font-bold text-slate-700 truncate mr-2"
                     >
-                      📂 {unit.name}
+                      {unit.icon || '📂'} {unit.name}
                     </button>
                     <button 
                       onClick={(e) => {
@@ -129,7 +130,7 @@ const LibraryModal: React.FC<LibraryModalProps> = ({
                   {cat.topics.map((topic, tIdx) => (
                     <button
                       key={tIdx}
-                      onClick={() => onSelectTopic(topic)}
+                      onClick={() => onSelectTopic(topic, cat.icon)}
                       className="px-3 py-1.5 bg-white border border-stone-100 rounded-xl text-xs font-semibold text-stone-500 hover:border-red-200 hover:text-red-600 hover:bg-red-50 transition-all flex items-center gap-1 group"
                     >
                       {topic}
