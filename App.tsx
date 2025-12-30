@@ -23,7 +23,6 @@ const App: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
-  const [customUrl, setCustomUrl] = useState('');
   const [aiTopic, setAiTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
@@ -72,7 +71,7 @@ const App: React.FC = () => {
     }
   }, [customStore]);
 
-  // 3. Computed Decks Source (Static Reference)
+  // 3. Computed Decks Source
   const allDecksSource = useMemo((): Decks => {
     const merged: Decks = { ...INITIAL_DECKS };
     Object.values(customStore).forEach((unit: CustomUnit) => {
@@ -81,7 +80,7 @@ const App: React.FC = () => {
     return merged;
   }, [customStore]);
 
-  // 4. Update displayed cards when category changes (Reset on nav)
+  // 4. Update displayed cards when category changes
   useEffect(() => {
     const source = allDecksSource[currentCategory] || [];
     setDisplayedCards([...source]);
@@ -109,12 +108,19 @@ const App: React.FC = () => {
 
   const handleShuffle = () => {
     if (displayedCards.length <= 1) return;
-    const shuffled = [...displayedCards].sort(() => Math.random() - 0.5);
-    setDisplayedCards(shuffled);
+    
+    // Proper Fisher-Yates Shuffle
+    const arr = [...displayedCards];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    
+    setDisplayedCards(arr);
     setCurrentIndex(0);
     setIsFlipped(false);
-    setShareToast("Babushka: 'Cards mixed!'");
-    setTimeout(() => setShareToast(null), 1500);
+    setShareToast("Babushka: 'Cards mixed up! Let's go!'");
+    setTimeout(() => setShareToast(null), 2000);
   };
 
   const handleShareUnit = (id: string) => {
@@ -163,7 +169,7 @@ const App: React.FC = () => {
         setAiTopic('');
       }
     } catch (e) {
-      alert("Babushka: 'My brain is a bit fuzzy. Let's try again, dearie.'");
+      alert("Babushka: 'My brain is a bit fuzzy. Let's try again later!'");
     } finally {
       setIsGenerating(false);
     }
@@ -303,7 +309,7 @@ const App: React.FC = () => {
 
       {showCustomModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[32px] w-full max-sm p-8 shadow-2xl animate-in zoom-in-95">
+          <div className="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl animate-in zoom-in-95">
             <h2 className="text-2xl font-black text-slate-900 mb-6">New Unit</h2>
             <div className="space-y-6">
               <div>
