@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { INITIAL_DECKS, CATEGORY_LABELS } from './constants';
 import { Decks, FlashCardItem } from './types';
@@ -165,11 +164,15 @@ const App: React.FC = () => {
         handleAddUnit(topic, newDeckData);
         setAiTopic('');
       } else {
-        throw new Error("Empty data returned");
+        throw new Error("EMPTY_RESPONSE");
       }
     } catch (e: any) {
-      console.error(e);
-      alert(`Babushka: "I'm having a little trouble with '${topic}'. Make sure my secret key is in the project settings!"`);
+      console.error("AI Generation Error:", e);
+      if (e.message === 'API_KEY_MISSING') {
+        alert("Babushka: 'The samovar is cold! You forgot to put the secret API key in the Vercel project settings!'");
+      } else {
+        alert("Babushka: 'My brain is a bit fuzzy. Let's try again later! Check your browser console to see what happened.'");
+      }
     } finally {
       setIsGenerating(false);
     }
