@@ -55,8 +55,9 @@ const App: React.FC = () => {
           });
           
           setCurrentCategory(newId);
-          setShareToast(`Babushka: "A gift! I've added '${decoded.name}' to your collection!"`);
+          setShareToast(`Babushka: "A gift! '${decoded.name}' is in your bag!"`);
           window.history.replaceState({}, document.title, window.location.pathname);
+          setTimeout(() => setShareToast(null), 4000);
         }
       } catch (e) {
         console.error("Shared deck invalid", e);
@@ -71,17 +72,16 @@ const App: React.FC = () => {
     }
   }, [customStore]);
 
-  // 3. Computed Decks
+  // 3. Computed Decks Source (Static Reference)
   const allDecksSource = useMemo((): Decks => {
     const merged: Decks = { ...INITIAL_DECKS };
-    // Fix: Explicitly type the unit in forEach to prevent 'unknown' property access errors
     Object.values(customStore).forEach((unit: CustomUnit) => {
       merged[unit.id] = unit.cards;
     });
     return merged;
   }, [customStore]);
 
-  // 4. Update displayed cards when category changes
+  // 4. Update displayed cards when category changes (Reset on nav)
   useEffect(() => {
     const source = allDecksSource[currentCategory] || [];
     setDisplayedCards([...source]);
@@ -109,16 +109,12 @@ const App: React.FC = () => {
 
   const handleShuffle = () => {
     if (displayedCards.length <= 1) return;
-    // Fisher-Yates shuffle for true randomness
-    const shuffled = [...displayedCards];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      // Fix: Correct index swapping logic to avoid using object as index
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
+    const shuffled = [...displayedCards].sort(() => Math.random() - 0.5);
     setDisplayedCards(shuffled);
     setCurrentIndex(0);
     setIsFlipped(false);
+    setShareToast("Babushka: 'Cards mixed!'");
+    setTimeout(() => setShareToast(null), 1500);
   };
 
   const handleShareUnit = (id: string) => {
@@ -135,7 +131,7 @@ const App: React.FC = () => {
 
   const handleDeleteUnit = (idToDelete: string) => {
     if (!customStore[idToDelete]) return;
-    if (window.confirm(`Babushka: "Are you sure you want to forget '${customStore[idToDelete].name}'?"`)) {
+    if (window.confirm(`Babushka: "Forget '${customStore[idToDelete].name}'?"`)) {
       if (currentCategory === idToDelete) setCurrentCategory('alphabet');
       setCustomStore(prev => {
         const next = { ...prev };
@@ -167,7 +163,7 @@ const App: React.FC = () => {
         setAiTopic('');
       }
     } catch (e) {
-      alert("Babushka: 'My brain is a bit fuzzy. Let's try that topic again later, dearie.'");
+      alert("Babushka: 'My brain is a bit fuzzy. Let's try again, dearie.'");
     } finally {
       setIsGenerating(false);
     }
@@ -175,7 +171,7 @@ const App: React.FC = () => {
 
   const getLabel = (key: string) => {
     if (CATEGORY_LABELS[key] && key !== 'custom') return CATEGORY_LABELS[key];
-    if (customStore[key]) return `Unit ${Object.keys(CATEGORY_LABELS).length}: ${customStore[key].name}`;
+    if (customStore[key]) return `Unit 📂: ${customStore[key].name}`;
     return key;
   };
 
@@ -197,7 +193,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center bg-stone-50 py-8 px-4 relative overflow-x-hidden">
       {shareToast && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm animate-bounce">
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[300] bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold text-sm animate-in slide-in-from-top-10 duration-300">
           {shareToast}
         </div>
       )}
@@ -261,7 +257,7 @@ const App: React.FC = () => {
           </div>
         ) : (
           <div className="w-full h-full bg-white rounded-[40px] border-2 border-dashed border-stone-200 flex items-center justify-center text-stone-300 font-bold italic">
-            This unit is empty, dearie.
+            Empty unit, dearie.
           </div>
         )}
       </main>
@@ -278,7 +274,9 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-4">
-          <div className="text-stone-400 font-black text-[10px] tracking-widest">{currentIndex + 1} OF {displayedCards.length}</div>
+          <div className="text-stone-400 font-black text-[10px] tracking-widest uppercase">
+            {displayedCards.length > 0 ? `${currentIndex + 1} / ${displayedCards.length}` : '0 / 0'}
+          </div>
           {customStore[currentCategory] && (
             <div className="flex gap-2">
               <button onClick={() => handleShareUnit(currentCategory)} className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100">
@@ -305,7 +303,7 @@ const App: React.FC = () => {
 
       {showCustomModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-[32px] w-full max-w-sm p-8 shadow-2xl animate-in zoom-in-95">
+          <div className="bg-white rounded-[32px] w-full max-sm p-8 shadow-2xl animate-in zoom-in-95">
             <h2 className="text-2xl font-black text-slate-900 mb-6">New Unit</h2>
             <div className="space-y-6">
               <div>
@@ -315,15 +313,9 @@ const App: React.FC = () => {
                   <button onClick={() => handleAiGenerate()} disabled={isGenerating || !aiTopic} className="bg-red-600 text-white px-4 rounded-xl font-bold text-xs disabled:opacity-50">Create</button>
                 </div>
               </div>
-              <div className="relative flex items-center py-2"><div className="flex-grow border-t border-stone-200"></div><span className="mx-4 text-stone-300 text-[10px] font-black uppercase">Or</span><div className="flex-grow border-t border-stone-200"></div></div>
-              <div>
-                <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 block">Import URL</label>
-                <input type="text" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)} placeholder="https://link-to-json" className="w-full h-12 bg-stone-50 border border-stone-200 rounded-xl px-4 text-sm outline-none font-medium" />
-              </div>
             </div>
             <div className="flex gap-3 mt-10">
               <button onClick={() => setShowCustomModal(false)} className="flex-1 h-12 rounded-xl text-stone-400 font-bold text-sm">Cancel</button>
-              <button disabled={!customUrl} className="flex-1 h-12 bg-slate-900 text-white rounded-xl font-bold text-sm opacity-50">Import</button>
             </div>
           </div>
         </div>
