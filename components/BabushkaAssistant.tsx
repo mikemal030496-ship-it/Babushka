@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { askBabushka } from '../services/gemini';
 import Matryoshka from './Matryoshka';
@@ -30,7 +29,7 @@ const BabushkaAssistant: React.FC<BabushkaAssistantProps> = ({ currentWord }) =>
         <div className="bg-white rounded-2xl shadow-2xl w-80 mb-4 overflow-hidden border border-red-100 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="bg-red-600 p-4 flex items-center gap-3">
             <Matryoshka className="w-8 h-8" />
-            <h3 className="text-white font-bold">Ask Babushka</h3>
+            <h3 className="text-white font-bold">Ask Dedushka</h3>
           </div>
           
           <div className="p-4 h-64 overflow-y-auto bg-stone-50 flex flex-col gap-3">
@@ -40,10 +39,10 @@ const BabushkaAssistant: React.FC<BabushkaAssistantProps> = ({ currentWord }) =>
               </div>
             ) : (
               <p className="text-xs text-slate-400 text-center mt-12">
-                "Hello, dearie! Want to know how to pronounce '{currentWord}' or what it means in Moscow?"
+                "Hello! Want to know how to pronounce '{currentWord}' or what it means to us in Russia?"
               </p>
             )}
-            {loading && <div className="text-xs text-red-500 animate-pulse text-center">Babushka is thinking...</div>}
+            {loading && <div className="text-xs text-red-500 animate-pulse text-center">Dedushka is thinking...</div>}
           </div>
 
           <form onSubmit={handleAsk} className="p-3 bg-white border-t flex gap-2">

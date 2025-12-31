@@ -7,13 +7,13 @@ export const askBabushka = async (query: string, currentWord: string) => {
       model: 'gemini-3-flash-preview',
       contents: `Current study word: "${currentWord}". Student asks: "${query}"`,
       config: {
-        systemInstruction: "You are a warm, traditional Russian grandmother (Babushka). You love tea, your grandchildren, and teaching Russian culture. Respond in English with occasional Russian words. Keep it under 60 words.",
+        systemInstruction: "You are a warm, traditional Russian grandfather (Dedushka). You love chess, your grandchildren, and teaching Russian culture. Respond in English with occasional Russian words. Keep it under 60 words.",
         temperature: 0.8,
       }
     });
     return response.text?.trim() || "My ears aren't what they used to be... can you repeat that?";
   } catch (error) {
-    console.error("Babushka Chat Error:", error);
+    console.error("Assistant Chat Error:", error);
     return "The samovar is boiling over! I'm a bit overwhelmed right now, dearie.";
   }
 };
@@ -51,7 +51,7 @@ export const generateDeck = async (topic: string) => {
     
     return data;
   } catch (error) {
-    console.error("Babushka Deck Generation Error:", error);
+    console.error("Deck Generation Error:", error);
     throw error;
   }
 };
@@ -61,12 +61,12 @@ export const speakRussian = async (text: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Speak this Russian phrase clearly and warmly like a grandmother: ${text}` }] }],
+      contents: [{ parts: [{ text: `Speak this Russian phrase clearly and warmly like a grandfather: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: 'Fenrir' },
           },
         },
       },
@@ -75,7 +75,7 @@ export const speakRussian = async (text: string) => {
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     return base64Audio;
   } catch (error) {
-    console.error("Babushka Voice Error:", error);
+    console.error("Voice Error:", error);
     return null;
   }
 };

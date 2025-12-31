@@ -87,7 +87,7 @@ const App: React.FC = () => {
           });
           
           setCurrentCategory(newId);
-          setShareToast(`Babushka: "A gift! '${decoded.name}' is in your bag!"`);
+          setShareToast(`Dedushka: "A gift! '${decoded.name}' is in your bag!"`);
           window.history.replaceState({}, document.title, window.location.pathname);
           setTimeout(() => setShareToast(null), 4000);
         }
@@ -146,7 +146,7 @@ const App: React.FC = () => {
     setDisplayedCards(arr);
     setCurrentIndex(0);
     setIsFlipped(false);
-    setShareToast("Babushka: 'Cards mixed up! Let's go!'");
+    setShareToast("Dedushka: 'Cards mixed up! Let's go!'");
     setTimeout(() => setShareToast(null), 2000);
   };
 
@@ -180,14 +180,14 @@ const App: React.FC = () => {
     const shareUrl = `${window.location.origin}${window.location.pathname}?deck=${payload}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
-      setShareToast("Magic link copied! Send it to her! ❤️");
+      setShareToast("Magic link copied! Send it over! ❤️");
       setTimeout(() => setShareToast(null), 3000);
     });
   };
 
   const handleDeleteUnit = (idToDelete: string) => {
     if (!customStore[idToDelete]) return;
-    if (window.confirm(`Babushka: "Forget '${customStore[idToDelete].name}'?"`)) {
+    if (window.confirm(`Dedushka: "Forget '${customStore[idToDelete].name}'?"`)) {
       if (currentCategory === idToDelete) setCurrentCategory('alphabet');
       setCustomStore(prev => {
         const next = { ...prev };
@@ -222,7 +222,7 @@ const App: React.FC = () => {
       }
     } catch (e: any) {
       console.error("AI Generation Error:", e);
-      alert("Babushka: 'My brain is a bit fuzzy. Let's try again in a moment, dearie!'");
+      alert("Dedushka: 'My brain is a bit fuzzy. Let's try again in a moment!'");
     } finally {
       setIsGenerating(false);
     }
@@ -287,8 +287,8 @@ const App: React.FC = () => {
       {isGenerating && (
         <div className="fixed inset-0 bg-white/95 backdrop-blur-md z-[200] flex flex-col items-center justify-center text-center p-8">
           <Matryoshka className="w-24 h-24 mb-6 animate-bounce" />
-          <h2 className="text-2xl font-black text-red-600 mb-2 italic">Babushka is typing...</h2>
-          <p className="text-stone-400 max-w-xs font-medium italic">"Hang on dearie, making sure these words are just right for you."</p>
+          <h2 className="text-2xl font-black text-red-600 mb-2 italic">Dedushka is typing...</h2>
+          <p className="text-stone-400 max-w-xs font-medium italic">"Hang on, making sure these words are just right for you."</p>
         </div>
       )}
 
@@ -414,7 +414,7 @@ const App: React.FC = () => {
               ))}
             </div>
             <div className="p-6 bg-stone-50 border-t border-stone-100 text-center">
-               <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Babushka says: "Repetition is the mother of learning!"</p>
+               <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Dedushka says: "Repetition is the mother of learning!"</p>
             </div>
           </div>
         </div>
