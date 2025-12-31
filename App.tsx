@@ -1,17 +1,46 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { INITIAL_DECKS, CATEGORY_LABELS } from './constants';
 import { Decks, FlashCardItem } from './types';
 import Matryoshka from './components/Matryoshka';
 import BabushkaAssistant from './components/BabushkaAssistant';
 import LibraryModal from './components/LibraryModal';
-import { generateDeck } from './services/gemini';
+import { generateDeck, speakRussian } from './services/gemini';
 
 interface CustomUnit {
   id: string;
   name: string;
   icon?: string;
   cards: FlashCardItem[];
+}
+
+// Audio Decoding Helpers
+function decodeBase64(base64: string) {
+  const binaryString = atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function decodeAudioData(
+  data: Uint8Array,
+  ctx: AudioContext,
+  sampleRate: number,
+  numChannels: number,
+): Promise<AudioBuffer> {
+  const dataInt16 = new Int16Array(data.buffer);
+  const frameCount = dataInt16.length / numChannels;
+  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+  for (let channel = 0; channel < numChannels; channel++) {
+    const channelData = buffer.getChannelData(channel);
+    for (let i = 0; i < frameCount; i++) {
+      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+    }
+  }
+  return buffer;
 }
 
 const App: React.FC = () => {
@@ -24,9 +53,13 @@ const App: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const [aiTopic, setAiTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
+
+  const audioContext = useMemo(() => new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 }), []);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_CUSTOM);
@@ -115,6 +148,29 @@ const App: React.FC = () => {
     setIsFlipped(false);
     setShareToast("Babushka: 'Cards mixed up! Let's go!'");
     setTimeout(() => setShareToast(null), 2000);
+  };
+
+  const handlePlayAudio = async (e: React.MouseEvent, text: string) => {
+    e.stopPropagation();
+    if (isPlayingAudio) return;
+    setIsPlayingAudio(true);
+    try {
+      const base64 = await speakRussian(text);
+      if (base64) {
+        const bytes = decodeBase64(base64);
+        const buffer = await decodeAudioData(bytes, audioContext, 24000, 1);
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioContext.destination);
+        source.onended = () => setIsPlayingAudio(false);
+        source.start();
+      } else {
+        setIsPlayingAudio(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsPlayingAudio(false);
+    }
   };
 
   const handleShareUnit = (id: string) => {
@@ -207,7 +263,7 @@ const App: React.FC = () => {
       <header className="w-full max-w-md flex flex-col items-center mb-10 text-center">
         <div className="flex items-center gap-3 mb-2">
             <Matryoshka className="w-12 h-12" />
-            <h1 className="text-4xl font-serif font-black text-red-600 tracking-tight">Babushka</h1>
+            <h1 className="text-4xl font-serif font-black text-red-600 tracking-tight text-shadow">Babushka</h1>
         </div>
         <p className="text-stone-500 text-xs font-bold mb-6 uppercase tracking-[0.3em]">Russian Language Trainer</p>
         
@@ -244,6 +300,24 @@ const App: React.FC = () => {
           >
             <div className="absolute inset-0 backface-hidden bg-white rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.1)] flex flex-col items-center justify-center p-8 border border-stone-100">
               <div className="absolute top-8 text-[10px] font-black text-stone-300 uppercase tracking-widest">{getLabel(currentCategory)}</div>
+              
+              <button 
+                onClick={(e) => handlePlayAudio(e, currentItem.f)}
+                disabled={isPlayingAudio}
+                className="absolute top-12 right-12 w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100 disabled:opacity-50"
+              >
+                {isPlayingAudio ? (
+                  <span className="w-4 h-4 rounded-full border-2 border-red-600 border-t-transparent animate-spin"></span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+                    <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+                    <path d="M8.707 11.182A4.5 4.5 0 0 0 10.025 8a4.5 4.5 0 0 0-1.318-3.182L8 5.525A3.5 3.5 0 0 1 9.025 8a3.5 3.5 0 0 1-1.025 2.475z"/>
+                    <path d="M6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06z"/>
+                  </svg>
+                )}
+              </button>
+
               <div className={`font-bold text-slate-800 text-center leading-tight break-words px-4 ${currentItem.f.length > 12 ? 'text-4xl' : 'text-6xl'}`}>
                 {currentItem.f}
               </div>
@@ -281,6 +355,12 @@ const App: React.FC = () => {
           <div className="text-stone-400 font-black text-[10px] tracking-widest uppercase">
             {displayedCards.length > 0 ? `${currentIndex + 1} / ${displayedCards.length}` : '0 / 0'}
           </div>
+          <button 
+            onClick={() => setShowSummary(true)}
+            className="text-[10px] font-black text-red-600 underline tracking-widest uppercase hover:text-red-700"
+          >
+            Unit Summary
+          </button>
           {customStore[currentCategory] && (
             <div className="flex gap-2">
               <button onClick={() => handleShareUnit(currentCategory)} className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100">
@@ -303,6 +383,41 @@ const App: React.FC = () => {
           customUnits={Object.values(customStore)}
           onDeleteUnit={handleDeleteUnit}
         />
+      )}
+
+      {showSummary && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[250] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[40px] w-full max-w-lg h-[80vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8">
+            <div className="p-8 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
+              <div>
+                <h2 className="text-2xl font-serif font-black text-slate-800">Unit Summary</h2>
+                <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-1">{getLabel(currentCategory)}</p>
+              </div>
+              <button onClick={() => setShowSummary(false)} className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-stone-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/></svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {displayedCards.map((card, idx) => (
+                <div key={idx} className="p-4 bg-white border border-stone-100 rounded-2xl flex items-center gap-4 hover:border-red-100 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-stone-50 text-[10px] font-black text-stone-300 flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-lg font-bold text-slate-800">{card.f}</div>
+                    <div className="text-sm text-stone-400 italic">[{card.p}]</div>
+                  </div>
+                  <div className="text-right font-medium text-red-600 truncate max-w-[120px]">
+                    {card.t}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="p-6 bg-stone-50 border-t border-stone-100 text-center">
+               <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Babushka says: "Repetition is the mother of learning!"</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {showCustomModal && (
@@ -330,6 +445,7 @@ const App: React.FC = () => {
         .transform-style-3d { transform-style: preserve-3d; }
         .backface-hidden { backface-visibility: hidden; }
         .rotate-y-180 { transform: rotateY(180deg); }
+        .text-shadow { text-shadow: 0 4px 8px rgba(214, 40, 40, 0.1); }
       `}</style>
     </div>
   );

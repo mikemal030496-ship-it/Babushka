@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 
 export const askBabushka = async (query: string, currentWord: string) => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
@@ -53,5 +53,29 @@ export const generateDeck = async (topic: string) => {
   } catch (error) {
     console.error("Babushka Deck Generation Error:", error);
     throw error;
+  }
+};
+
+export const speakRussian = async (text: string) => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text: `Speak this Russian phrase clearly and warmly like a grandmother: ${text}` }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: 'Kore' },
+          },
+        },
+      },
+    });
+    
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    return base64Audio;
+  } catch (error) {
+    console.error("Babushka Voice Error:", error);
+    return null;
   }
 };
