@@ -61,12 +61,11 @@ export const speakRussian = async (text: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Speak this Russian phrase with a deep, mature, and resonant male voice. You are a wise Russian patriarch. Tone: Authoritative and calm. Phrase: ${text}` }] }],
+      contents: [{ parts: [{ text: `Speak this Russian phrase with a deep, mature, resonant, and authoritative bass-baritone male voice. You are a wise Russian patriarch. Use a slow, clear, and commanding pace. Phrase: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            // Fenrir is the most suitable for a mature male voice among prebuilts.
             prebuiltVoiceConfig: { voiceName: 'Fenrir' },
           },
         },

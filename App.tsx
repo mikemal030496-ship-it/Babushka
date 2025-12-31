@@ -30,13 +30,23 @@ async function decodeAudioData(
   sampleRate: number,
   numChannels: number,
 ): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
+  // 16-bit PCM uses 2 bytes per sample. We must ensure the buffer is even-length.
+  const bytesPerSample = 2;
+  const totalSamples = Math.floor(data.length / (bytesPerSample * numChannels));
+  const usableByteLength = totalSamples * bytesPerSample * numChannels;
+  
+  // Create a view for the 16-bit signed integers
+  const dataInt16 = new Int16Array(data.buffer, 0, usableByteLength / 2);
   const frameCount = dataInt16.length / numChannels;
+  
+  if (frameCount === 0) throw new Error("Audio buffer is empty or invalid");
+  
   const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
 
   for (let channel = 0; channel < numChannels; channel++) {
     const channelData = buffer.getChannelData(channel);
     for (let i = 0; i < frameCount; i++) {
+      // Normalize 16-bit PCM (-32768 to 32767) to Float32 (-1.0 to 1.0)
       channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
     }
   }
@@ -59,7 +69,15 @@ const App: React.FC = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [shareToast, setShareToast] = useState<string | null>(null);
 
-  const audioContext = useMemo(() => new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 }), []);
+  // Use a ref for AudioContext to persist across renders and handle state transitions
+  const audioContextRef = React.useRef<AudioContext | null>(null);
+
+  const getAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    }
+    return audioContextRef.current;
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_CUSTOM);
@@ -153,22 +171,30 @@ const App: React.FC = () => {
   const handlePlayAudio = async (e: React.MouseEvent, text: string) => {
     e.stopPropagation();
     if (isPlayingAudio) return;
+    
+    const ctx = getAudioContext();
+    // Resume context if suspended (required by browsers for first interaction)
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
     setIsPlayingAudio(true);
     try {
       const base64 = await speakRussian(text);
       if (base64) {
         const bytes = decodeBase64(base64);
-        const buffer = await decodeAudioData(bytes, audioContext, 24000, 1);
-        const source = audioContext.createBufferSource();
+        const buffer = await decodeAudioData(bytes, ctx, 24000, 1);
+        const source = ctx.createBufferSource();
         source.buffer = buffer;
-        source.connect(audioContext.destination);
+        source.connect(ctx.destination);
         source.onended = () => setIsPlayingAudio(false);
         source.start();
       } else {
+        console.warn("No audio data returned from service.");
         setIsPlayingAudio(false);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Playback error:", err);
       setIsPlayingAudio(false);
     }
   };
