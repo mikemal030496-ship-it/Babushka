@@ -39,10 +39,10 @@ const BabushkaAssistant: React.FC<BabushkaAssistantProps> = ({ currentWord }) =>
               </div>
             ) : (
               <p className="text-xs text-slate-400 text-center mt-12">
-                "Hello! Want to know how to pronounce '{currentWord}' or what it means to us in Russia?"
+                "Good day. Do you have inquiries regarding the term '{currentWord}' or its place in our culture?"
               </p>
             )}
-            {loading && <div className="text-xs text-red-500 animate-pulse text-center">Dedushka is thinking...</div>}
+            {loading && <div className="text-xs text-red-500 animate-pulse text-center">Dedushka is considering your query...</div>}
           </div>
 
           <form onSubmit={handleAsk} className="p-3 bg-white border-t flex gap-2">
@@ -50,7 +50,7 @@ const BabushkaAssistant: React.FC<BabushkaAssistantProps> = ({ currentWord }) =>
               type="text" 
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask a question..."
+              placeholder="Submit your question..."
               className="flex-1 text-sm border-none focus:ring-0 outline-none"
             />
             <button 
@@ -72,7 +72,7 @@ const BabushkaAssistant: React.FC<BabushkaAssistantProps> = ({ currentWord }) =>
       >
         <Matryoshka className="w-10 h-10" />
         <span className="absolute -top-2 -right-2 bg-yellow-400 text-red-900 text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-          Chat!
+          Consult
         </span>
       </button>
     </div>

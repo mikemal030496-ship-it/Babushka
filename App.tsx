@@ -87,7 +87,7 @@ const App: React.FC = () => {
           });
           
           setCurrentCategory(newId);
-          setShareToast(`Dedushka: "A gift! '${decoded.name}' is in your bag!"`);
+          setShareToast(`Dedushka: "I have added '${decoded.name}' to your materials."`);
           window.history.replaceState({}, document.title, window.location.pathname);
           setTimeout(() => setShareToast(null), 4000);
         }
@@ -146,7 +146,7 @@ const App: React.FC = () => {
     setDisplayedCards(arr);
     setCurrentIndex(0);
     setIsFlipped(false);
-    setShareToast("Dedushka: 'Cards mixed up! Let's go!'");
+    setShareToast("Dedushka: 'The order is changed. Begin again.'");
     setTimeout(() => setShareToast(null), 2000);
   };
 
@@ -180,14 +180,14 @@ const App: React.FC = () => {
     const shareUrl = `${window.location.origin}${window.location.pathname}?deck=${payload}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
-      setShareToast("Magic link copied! Send it over! ❤️");
+      setShareToast("The link is ready for sharing.");
       setTimeout(() => setShareToast(null), 3000);
     });
   };
 
   const handleDeleteUnit = (idToDelete: string) => {
     if (!customStore[idToDelete]) return;
-    if (window.confirm(`Dedushka: "Forget '${customStore[idToDelete].name}'?"`)) {
+    if (window.confirm(`Dedushka: "Discard '${customStore[idToDelete].name}'?"`)) {
       if (currentCategory === idToDelete) setCurrentCategory('alphabet');
       setCustomStore(prev => {
         const next = { ...prev };
@@ -222,7 +222,7 @@ const App: React.FC = () => {
       }
     } catch (e: any) {
       console.error("AI Generation Error:", e);
-      alert("Dedushka: 'My brain is a bit fuzzy. Let's try again in a moment!'");
+      alert("Dedushka: 'I am unable to recall those details right now. Try again.'");
     } finally {
       setIsGenerating(false);
     }
@@ -287,8 +287,8 @@ const App: React.FC = () => {
       {isGenerating && (
         <div className="fixed inset-0 bg-white/95 backdrop-blur-md z-[200] flex flex-col items-center justify-center text-center p-8">
           <Matryoshka className="w-24 h-24 mb-6 animate-bounce" />
-          <h2 className="text-2xl font-black text-red-600 mb-2 italic">Dedushka is typing...</h2>
-          <p className="text-stone-400 max-w-xs font-medium italic">"Hang on, making sure these words are just right for you."</p>
+          <h2 className="text-2xl font-black text-red-600 mb-2 italic">Dedushka is composing...</h2>
+          <p className="text-stone-400 max-w-xs font-medium italic">"Patience. These words are being selected with care."</p>
         </div>
       )}
 
@@ -335,7 +335,7 @@ const App: React.FC = () => {
           </div>
         ) : (
           <div className="w-full h-full bg-white rounded-[40px] border-2 border-dashed border-stone-200 flex items-center justify-center text-stone-300 font-bold italic">
-            Empty unit, dearie.
+            No active unit.
           </div>
         )}
       </main>
@@ -367,7 +367,7 @@ const App: React.FC = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1 1 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4 4 0 0 1-.128-1.287z"/><path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243z"/></svg>
               </button>
               <button onClick={() => handleDeleteUnit(currentCategory)} className="w-8 h-8 rounded-full bg-red-50 text-red-600 flex items-center justify-center hover:bg-red-100">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/><path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/></svg>
               </button>
             </div>
           )}
@@ -414,7 +414,7 @@ const App: React.FC = () => {
               ))}
             </div>
             <div className="p-6 bg-stone-50 border-t border-stone-100 text-center">
-               <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Dedushka says: "Repetition is the mother of learning!"</p>
+               <p className="text-[10px] font-black text-stone-300 uppercase tracking-widest">Dedushka: "Repetition is the foundation of mastery."</p>
             </div>
           </div>
         </div>
@@ -428,7 +428,7 @@ const App: React.FC = () => {
               <div>
                 <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2 block">AI Topic</label>
                 <div className="flex gap-2">
-                  <input type="text" value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder="e.g. Love, Space, Food" className="flex-1 h-12 bg-stone-50 border border-stone-200 rounded-xl px-4 text-sm outline-none font-medium" onKeyDown={(e) => e.key === 'Enter' && handleAiGenerate()} />
+                  <input type="text" value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder="e.g. History, Logic, Industry" className="flex-1 h-12 bg-stone-50 border border-stone-200 rounded-xl px-4 text-sm outline-none font-medium" onKeyDown={(e) => e.key === 'Enter' && handleAiGenerate()} />
                   <button onClick={() => handleAiGenerate()} disabled={isGenerating || !aiTopic} className="bg-red-600 text-white px-4 rounded-xl font-bold text-xs disabled:opacity-50">Create</button>
                 </div>
               </div>

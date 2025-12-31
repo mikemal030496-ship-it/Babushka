@@ -7,14 +7,14 @@ export const askBabushka = async (query: string, currentWord: string) => {
       model: 'gemini-3-flash-preview',
       contents: `Current study word: "${currentWord}". Student asks: "${query}"`,
       config: {
-        systemInstruction: "You are a warm, traditional Russian grandfather (Dedushka). You love chess, your grandchildren, and teaching Russian culture. Respond in English with occasional Russian words. Keep it under 60 words.",
-        temperature: 0.8,
+        systemInstruction: "You are a mature, wise Russian man (Dedushka). You speak with authority, gravitas, and calm warmth. You are a respected patriarch who values discipline, tradition, and learning. Respond in clear English with occasional Russian terms. Avoid overly sweet or diminutive language. Keep responses concise and stoic (under 60 words).",
+        temperature: 0.7,
       }
     });
-    return response.text?.trim() || "My ears aren't what they used to be... can you repeat that?";
+    return response.text?.trim() || "My ears are not what they once were. Speak clearly.";
   } catch (error) {
     console.error("Assistant Chat Error:", error);
-    return "The samovar is boiling over! I'm a bit overwhelmed right now, dearie.";
+    return "The samovar is cold. I am preoccupied at the moment.";
   }
 };
 
@@ -25,7 +25,7 @@ export const generateDeck = async (topic: string) => {
       model: 'gemini-3-flash-preview',
       contents: `Create a Russian language learning unit about: "${topic}".`,
       config: {
-        systemInstruction: "You are an expert Russian tutor. Generate exactly 15 high-quality flashcards. Return ONLY a JSON array. Each object must have 'f' (Russian), 't' (English), 'p' (Pronunciation), 'c' (Context/Fact).",
+        systemInstruction: "You are a professional Russian linguist. Generate exactly 15 high-quality flashcards for a serious student. Return ONLY a JSON array. Each object must have 'f' (Russian), 't' (English), 'p' (Pronunciation), 'c' (Context/Fact).",
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -61,11 +61,12 @@ export const speakRussian = async (text: string) => {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: `Speak this Russian phrase clearly and warmly like a grandfather: ${text}` }] }],
+      contents: [{ parts: [{ text: `Speak this Russian phrase with a deep, mature, and resonant male voice. You are a wise Russian patriarch. Tone: Authoritative and calm. Phrase: ${text}` }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
+            // Fenrir is the most suitable for a mature male voice among prebuilts.
             prebuiltVoiceConfig: { voiceName: 'Fenrir' },
           },
         },
